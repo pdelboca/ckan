@@ -5,6 +5,7 @@ from logging import getLogger
 from ckan.common import json
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
+from ckanext.datatablesview import blueprint
 
 default = toolkit.get_validator(u'default')
 boolean_validator = toolkit.get_validator(u'boolean_validator')
@@ -17,7 +18,7 @@ class DataTablesView(p.SingletonPlugin):
     '''
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.IResourceView, inherit=True)
-    p.implements(p.IRoutes, inherit=True)
+    p.implements(p.IBlueprint)
 
     def update_config(self, config):
         '''
@@ -52,15 +53,5 @@ class DataTablesView(p.SingletonPlugin):
             }
         }
 
-    def before_map(self, m):
-        m.connect(
-            u'/datatables/ajax/{resource_view_id}',
-            controller=u'ckanext.datatablesview.controller'
-                       u':DataTablesController',
-            action=u'ajax')
-        m.connect(
-            u'/datatables/filtered-download/{resource_view_id}',
-            controller=u'ckanext.datatablesview.controller'
-                       u':DataTablesController',
-            action=u'filtered_download')
-        return m
+    def get_blueprint():
+        return blueprint.datatablesview
