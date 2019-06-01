@@ -7,6 +7,7 @@ import ckan.plugins as p
 import ckan.lib.datapreview as datapreview
 import urlparse
 from ckan.common import config
+from ckanext.resourceproxy import blueprint
 
 log = getLogger(__name__)
 
@@ -50,15 +51,12 @@ class ResourceProxy(p.SingletonPlugin):
         enabled by checking the ``ckan.resource_proxy_enabled`` config variable.
         ``config.get('ckan.resource_proxy_enabled', False)``
     """
-    p.implements(p.IRoutes, inherit=True)
+    p.implements(p.IBlueprint)
     p.implements(p.ITemplateHelpers, inherit=True)
 
 
-    def before_map(self, m):
-        m.connect('/dataset/{id}/resource/{resource_id}/proxy',
-                    controller='ckanext.resourceproxy.controller:ProxyController',
-                    action='proxy_resource')
-        return m
+    def get_blueprint(self):
+        return blueprint.resourceproxy
 
     def get_helpers(self):
         return {'view_resource_url': self.view_resource_url}

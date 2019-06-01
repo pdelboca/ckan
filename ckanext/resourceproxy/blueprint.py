@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+from flask import Blueprint
 from logging import getLogger
 import urlparse
 
@@ -13,12 +13,12 @@ from ckan.common import _
 from ckan.plugins.toolkit import asint
 
 log = getLogger(__name__)
-
 MAX_FILE_SIZE = asint(config.get('ckan.resource_proxy.max_file_size', 1024**2))
 CHUNK_SIZE = asint(config.get('ckan.resource_proxy.chunk_size', 4096))
 
+resourceproxy = Blueprint('resourceproxy', __name__)
 
-def proxy_resource(context, data_dict):
+def _proxy_resource(context, data_dict):
     ''' Chunked proxy for resources. To make sure that the file is not too
     large, first, we try to get the content length from the headers.
     If the headers to not contain a content length (if it is a chinked
@@ -82,10 +82,11 @@ def proxy_resource(context, data_dict):
         details = 'Could not proxy resource because the connection timed out.'
         base.abort(504, detail=details)
 
+def proxy_resource(self, resource_id):
+    data_dict = {'resource_id': resource_id}
+    context = {'model': base.model, 'session': base.model.Session,
+                'user': base.c.user}
+    return _proxy_resource(context, data_dict)
 
-class ProxyController(base.BaseController):
-    def proxy_resource(self, resource_id):
-        data_dict = {'resource_id': resource_id}
-        context = {'model': base.model, 'session': base.model.Session,
-                   'user': base.c.user}
-        return proxy_resource(context, data_dict)
+resourceproxy.add_url_rule(u'/dataset/<id>/resource/<resource_id>/proxy',
+                            view_func=proxy_resource)
